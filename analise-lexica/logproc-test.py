@@ -2,8 +2,6 @@ import unittest
 from logproc import LogProcLexer
 
 class TestLogProc(unittest.TestCase):
-    lp_lexer = None
-    lp_out = None
     def setUp(self):
         self.lp_lexer = LogProcLexer()
         fh = open("logproc.out", 'r')

@@ -2,8 +2,6 @@ import unittest
 from examplelexer import Ex351Lexer
 
 class TestEx351(unittest.TestCase):
-    ex_lexer = None
-
     def setUp(self):
         self.ex_lexer = Ex351Lexer()
 
