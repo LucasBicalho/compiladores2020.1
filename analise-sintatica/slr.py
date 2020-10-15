@@ -154,7 +154,7 @@ def slr_parsing_table(g):
                 if a in g.terminals:
                     gt = goto(l, a, g)
                     j = can.index(gt)
-                    action_tab[state_l][a] = ('shift', j)
+                    action_tab[state_l][a].append(('shift', j))
                 
             else:
                 # (b) If [A -> alpha *] is in Ii, then set
@@ -166,10 +166,10 @@ def slr_parsing_table(g):
                 if lhs != g.start_symbol:
                     follow = g.follow_tab[lhs]
                     for a in follow:
-                        action_tab[state_l][a] = ('reduce', (lhs, rhs))
+                        action_tab[state_l][a].append(('reduce', (lhs, rhs)))
                     
                 else:
-                    action_tab[state_l]['$'] = ('accept')
+                    action_tab[state_l]['$'].append(('accept',))
                 
         # 3. The goto transitions for state i are constructed for all
         # nonterminals A using the rule􏰗 If GOTO(Ii, A) = Ij 􏰉
@@ -179,7 +179,7 @@ def slr_parsing_table(g):
             gt = goto(l, A, g)
             if len(gt) != 0 and gt in can:
                 j = can.index(gt)
-                goto_tab[state_l][A] = j
+                goto_tab[state_l][A].append(j)
                 
     return (action_tab, goto_tab)
 
