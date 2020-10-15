@@ -48,6 +48,7 @@ class Grammar:
         self.pred_parsing_trace = []
         self.pp = pprint.PrettyPrinter()
         self.first_computed = False
+        self.follow_computed = False
     
     def getSymbols(self):
         symbols = self.non_terminals.copy()
@@ -137,6 +138,9 @@ class Grammar:
                     break
                 # We must first calculate FIRST(y_1) before
                 # use it.
+                if y_1 == s:
+                    continue
+
                 if self.first_tab[y_1] == set():
                     self.first(y_1)
                 # FIRST(y_1) \subseteq FIRST(s)    
@@ -230,6 +234,7 @@ class Grammar:
 
         for symbol in self.non_terminals:
             self.follow(symbol)
+        self.follow_computed = True
 
             
     def follow(self, s):

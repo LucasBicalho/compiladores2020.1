@@ -36,7 +36,12 @@ def closure(s, g):
         for lhs, rhs, dot_idx in clos:
             if dot_idx < len(rhs):
                 
-                # Do your magic here!
+                symbol = rhs[dot_idx]
+                if symbol in g.non_terminals:
+                    for rule in g.production_rules[symbol]:
+                        item = (symbol, rule, 0)
+                        new_items.add(item)
+
                 
         clos = clos.union(new_items)
         new_clos_size = len(clos)
@@ -52,8 +57,14 @@ def goto(s, x, g):
     goto_sx = set()
     for lhs, rhs, dot_idx in s:
 
-        # Do your magic here!
-        
+        if dot_idx < len(rhs):
+            symbol = rhs[dot_idx]
+            if symbol == x:
+                new_item = (lhs, rhs, dot_idx + 1)
+                goto_sx.add(new_item)
+
+    goto_sx = closure(goto_sx, g)
+
     return goto_sx
 
 def augment(g):
@@ -92,7 +103,11 @@ def canonical_items(g):
     while True:
         can_size = len(can)
 
-        # Do your magic here!
+        for set_of_items in can:
+            for symbol in g.getSymbols():
+                gt = goto(set_of_items, symbol, g)
+                if len(gt) != 0 and not gt in can:
+                    can.append(gt)
         
         new_can_size = len(can)
         if new_can_size == can_size:
@@ -136,7 +151,10 @@ def slr_parsing_table(g):
                 #        set ACTION[i,􏰥a] =􏰙shift j.
                 #      Here a must be a terminal.􏰋
 
-                # Do your magic here!
+                if a in g.terminals:
+                    gt = goto(l, a, g)
+                    j = can.index(gt)
+                    action_tab[state_l][a] = ('shift', j)
                 
             else:
                 # (b) If [A -> alpha *] is in Ii, then set
@@ -145,13 +163,23 @@ def slr_parsing_table(g):
                 # (c) If [S' -> S *] is in Ii, then set
                 # ACTION[i, $] = "accept".
 
-                # Do your magic here!
+                if lhs != g.start_symbol:
+                    follow = g.follow_tab[lhs]
+                    for a in follow:
+                        action_tab[state_l][a] = ('reduce', (lhs, rhs))
+                    
+                else:
+                    action_tab[state_l]['$'] = ('accept')
                 
         # 3. The goto transitions for state i are constructed for all
         # nonterminals A using the rule􏰗 If GOTO(Ii, A) = Ij 􏰉
         # then GOTO[i,􏰥A] = j.􏰋
 
-                # Do your magic here!
+        for A in g.non_terminals:
+            gt = goto(l, A, g)
+            if len(gt) != 0 and gt in can:
+                j = can.index(gt)
+                goto_tab[state_l][A] = j
                 
     return (action_tab, goto_tab)
 
@@ -173,8 +201,8 @@ if __name__ == '__main__':
     g = Grammar("E", p, ["E", "T", "F"],
                 ["+", "*", "(", ")", "id"])
 
-    print("Example 4.40, 244")
     pp = pprint.PrettyPrinter()
+    print("Example 4.40, 244")
     pp.pprint(closure({("E'", "E", 0)}, g))
 
     print("Example 4.4.1, pg 246")
