@@ -1091,11 +1091,17 @@ class DecPiAut(CmdPiAut):
 
     def __evalReturn(self, c):
         exp = c.exp()
-        self.pushCnt(CmdKW.RETURN)
+        self.pushCnt(DecCmdKW.RETURN)
         self.pushCnt(exp)
 
     def __evalReturnKW(self):
-        pass
+        val = self.popVal()
+        blkcmdkw1 = self.popCnt()
+        blkcmdkw2 = self.popCnt()
+        self.pushCnt(Num(val))
+        self.pushCnt(blkcmdkw2)
+        self.pushCnt(blkcmdkw1)
+
 
     def eval(self):
         d = self.popCnt()
@@ -1119,7 +1125,7 @@ class DecPiAut(CmdPiAut):
             self.__evalBlkCmdKW()
         elif isinstance(d, Return):
             self.__evalReturn(d)
-        elif d == CmdKW.RETURN:
+        elif d == DecCmdKW.RETURN:
             self.__evalReturnKW()
         else:
             self.pushCnt(d)
