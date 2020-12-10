@@ -154,3 +154,7 @@ class Impiler(object):
 
     def let(self, ast):
         return pi.Blk(ast.ds, ast.c)
+
+    def ret(self, ast):
+        return pi.Return(ast.e)
+

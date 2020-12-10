@@ -86,5 +86,5 @@ actual = ','%{ exp }* ;
 
 skip = "skip" ;
 
-ret = "return" exp ;
+ret = "return" e:exp ;
 
