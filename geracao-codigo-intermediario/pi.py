@@ -965,6 +965,17 @@ class DSeq(Dec):
         return self.operand(1)
 
 
+class Return(Cmd):
+    def __init__(self, e):
+        if isinstance(e, Exp):
+            Cmd.__init__(self, e)
+        else:
+            raise IllFormed(self, e)
+
+    def exp(self):
+        return self.operand(0)
+
+
 class DecExpKW(ExpKW):
     REF = "#REF"
     CNS = "#CNS"
@@ -973,6 +984,7 @@ class DecExpKW(ExpKW):
 class DecCmdKW(CmdKW):
     BLKDEC = "#BLKDEC"
     BLKCMD = "#BLKCMD"
+    RETURN = "#RETURN"
 
 
 class DecKW():
@@ -1077,6 +1089,14 @@ class DecPiAut(CmdPiAut):
         ls = self.popVal()
         self["locs"] = ls
 
+    def __evalReturn(self, c):
+        exp = c.exp()
+        self.pushCnt(CmdKW.RETURN)
+        self.pushCnt(exp)
+
+    def __evalReturnKW(self):
+        pass
+
     def eval(self):
         d = self.popCnt()
         if isinstance(d, Bind):
@@ -1097,6 +1117,10 @@ class DecPiAut(CmdPiAut):
             self.__evalBlkDecKW()
         elif d == DecCmdKW.BLKCMD:
             self.__evalBlkCmdKW()
+        elif isinstance(d, Return):
+            self.__evalReturn(d)
+        elif d == CmdKW.RETURN:
+            self.__evalReturnKW()
         else:
             self.pushCnt(d)
             super().eval()
