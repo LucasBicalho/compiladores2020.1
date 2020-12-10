@@ -1,6 +1,5 @@
 def f(x) {
-  if (x > 5) {
-    print(x)
-  }
+  return x
 }
-f(7)
+var result = f(5);
+print(result)
