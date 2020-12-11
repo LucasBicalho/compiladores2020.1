@@ -36,7 +36,7 @@ const = op:"const" idn:identifier "=" e:exp ";" ;
 @name
 identifier = /(?!\d)\w+/ ;
 
-exp = paren_exp | bin_exp | un_exp | @:atom ;
+exp = call | paren_exp | un_exp | bin_exp | @:atom ;
 
 paren_exp = "(" e:exp ")" ;
 
