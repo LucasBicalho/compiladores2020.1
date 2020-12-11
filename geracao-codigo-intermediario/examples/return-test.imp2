@@ -1,5 +1,10 @@
-def f(x) {
-  return x
+var resultado = 0 ;
+
+def func_square (num) {
+    var square = 0 ;
+    square := num * num ;
+    return square
 }
-var result = f(5);
-print(result)
+
+resultado := func_square(10) ;
+print(resultado)
