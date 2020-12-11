@@ -687,6 +687,17 @@ class CSeq(Cmd):
         return self.operand(1)
 
 
+class Return(Cmd):
+    def __init__(self, e):
+        if isinstance(e, Exp):
+            Cmd.__init__(self, e)
+        else:
+            raise IllFormed(self, e)
+
+    def exp(self):
+        return self.operand(0)
+
+
 class Env(dict):
     pass
 
@@ -704,6 +715,7 @@ class CmdKW:
     LOOP = "#LOOP"
     COND = "#COND"
     PRINT = "#PRINT"
+    RETURN = "#RETURN"
 
 
 class CmdPiAut(ExpPiAut):
@@ -824,6 +836,32 @@ class CmdPiAut(ExpPiAut):
         self.pushCnt(c2)
         self.pushCnt(c1)
 
+    def __evalReturn(self, c):
+        exp = c.exp()
+        self.pushCnt(CmdKW.RETURN)
+        self.pushCnt(exp)
+
+    def __evalReturnKW(self):
+        v = self.popVal()
+
+        t_val = []
+        t_cnt = []
+        tmp = self.popCnt()
+        while tmp == DecCmdKW.BLKCMD:
+            t_cnt.append(tmp)
+            t_env = self.popVal()
+            t_locs = self.popVal()
+            t_val.append(t_env)
+            t_val.append(t_locs)
+            tmp = self.popCnt()
+        self.pushCnt(tmp)
+
+        self.pushVal(v)
+        for i in range(len(t_cnt)):
+            self.pushCnt(t_cnt.pop())
+            self.pushVal(t_val.pop())
+            self.pushVal(t_val.pop())
+
     def eval(self):
         c = self.popCnt()
         if isinstance(c, Print):
@@ -848,6 +886,10 @@ class CmdPiAut(ExpPiAut):
             self.__evalLoopKW()
         elif isinstance(c, CSeq):
             self.__evalCSeq(c)
+        elif isinstance(d, Return):
+            self.__evalReturn(d)
+        elif d == CmdKW.RETURN:
+            self.__evalReturnKW()
         else:
             self.pushCnt(c)
             super().eval()
@@ -965,17 +1007,6 @@ class DSeq(Dec):
         return self.operand(1)
 
 
-class Return(Cmd):
-    def __init__(self, e):
-        if isinstance(e, Exp):
-            Cmd.__init__(self, e)
-        else:
-            raise IllFormed(self, e)
-
-    def exp(self):
-        return self.operand(0)
-
-
 class DecExpKW(ExpKW):
     REF = "#REF"
     CNS = "#CNS"
@@ -984,7 +1015,6 @@ class DecExpKW(ExpKW):
 class DecCmdKW(CmdKW):
     BLKDEC = "#BLKDEC"
     BLKCMD = "#BLKCMD"
-    RETURN = "#RETURN"
 
 
 class DecKW():
@@ -1089,20 +1119,6 @@ class DecPiAut(CmdPiAut):
         ls = self.popVal()
         self["locs"] = ls
 
-    def __evalReturn(self, c):
-        exp = c.exp()
-        self.pushCnt(DecCmdKW.RETURN)
-        self.pushCnt(exp)
-
-    def __evalReturnKW(self):
-        val = self.popVal()
-        blkcmdkw1 = self.popCnt()
-        blkcmdkw2 = self.popCnt()
-        self.pushCnt(Num(val))
-        self.pushCnt(blkcmdkw2)
-        self.pushCnt(blkcmdkw1)
-
-
     def eval(self):
         d = self.popCnt()
         if isinstance(d, Bind):
@@ -1123,10 +1139,6 @@ class DecPiAut(CmdPiAut):
             self.__evalBlkDecKW()
         elif d == DecCmdKW.BLKCMD:
             self.__evalBlkCmdKW()
-        elif isinstance(d, Return):
-            self.__evalReturn(d)
-        elif d == DecCmdKW.RETURN:
-            self.__evalReturnKW()
         else:
             self.pushCnt(d)
             super().eval()
