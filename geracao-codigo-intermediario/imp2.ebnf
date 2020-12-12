@@ -23,6 +23,7 @@
 @@keyword :: 'skip'
 @@keyword :: '{' '}'
 @@keyword :: 'print'
+@@keyword :: 'return'
 
 start = [ds:dec_seq] [cs:cmd_seq] $ ;
 
