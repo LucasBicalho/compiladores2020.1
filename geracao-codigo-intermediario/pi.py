@@ -603,7 +603,7 @@ class Id(ArithExp, BoolExp):
 class Print(Cmd):
 
     def __init__(self, e):
-        if isinstance(e, Exp):
+        if isinstance(e, Exp) or isinstance(e, Call):
             Cmd.__init__(self, e)
         else:
             raise IllFormed(self, e)
@@ -616,7 +616,7 @@ class Assign(Cmd):
 
     def __init__(self, i, e):
         if isinstance(i, Id):
-            if isinstance(e, Exp):
+            if isinstance(e, Exp) or isinstance(e, Call):
                 Cmd.__init__(self, i, e)
             else:
                 raise IllFormed(self, e)
@@ -886,9 +886,9 @@ class CmdPiAut(ExpPiAut):
             self.__evalLoopKW()
         elif isinstance(c, CSeq):
             self.__evalCSeq(c)
-        elif isinstance(d, Return):
-            self.__evalReturn(d)
-        elif d == CmdKW.RETURN:
+        elif isinstance(c, Return):
+            self.__evalReturn(c)
+        elif c == CmdKW.RETURN:
             self.__evalReturnKW()
         else:
             self.pushCnt(c)
@@ -912,7 +912,7 @@ class Bind(Dec):
                 i = args[0]
                 e = args[1]
                 if isinstance(i, Id):
-                    if isinstance(e, Exp):
+                    if isinstance(e, Exp) or isinstance(e, Call):
                         Dec.__init__(self, i, e)
                     else:
                         raise IllFormed(self, e)
