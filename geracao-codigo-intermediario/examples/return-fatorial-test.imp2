@@ -1,0 +1,11 @@
+def fatorial(x) {
+  var result = 1, cont = x;
+  while (cont > 1) {
+    result := result * cont;
+    cont := cont - 1
+  };
+  return result
+}
+
+print(fatorial(7))
+# Output = [5040]

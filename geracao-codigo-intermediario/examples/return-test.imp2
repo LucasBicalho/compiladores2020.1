@@ -1,0 +1,8 @@
+def square(x) {
+  var s = 0;
+  s := x * x;
+  return s
+}
+
+print(square(6))
+# Output = [36]

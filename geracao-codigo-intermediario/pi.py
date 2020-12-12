@@ -1,4 +1,5 @@
 # -*- buffer-read-only: t -*-
+import datetime
 from termcolor import colored
 
 #
@@ -7,17 +8,20 @@ from termcolor import colored
 
 COLORED = False
 
+
 class IllFormed(Exception):
     def __str__(self):
         return "Ill formed Π IR AST: " + colored(self.args, 'red')
 
+
 class Statement:
     def __init__(self, *args):
         self.__opr = list(args)
-        
+
     def __str__(self):
         if COLORED:
-            ret = colored(str(self.__class__.__name__), None, attrs = ['bold']) + "("
+            ret = colored(str(self.__class__.__name__),
+                          None, attrs=['bold']) + "("
         else:
             ret = str(self.__class__.__name__) + "("
         if len(self.__opr) > 0:
@@ -37,16 +41,17 @@ class Statement:
 
     def operands(self):
         return self.__opr
-    
+
     def operand(self, n):
         if self.arity() > 0:
             return self.__opr[n]
         else:
             raise IllFormed("Call to 'operand' on " +
-                        str(self) + ": " + "No operands.")
+                            str(self) + ": " + "No operands.")
 
     def operator(self):
         return str(self.__class__.__name__)
+
 
 class ValueStack(list):
     pass
@@ -59,8 +64,10 @@ class ControlStack(list):
 class EvaluationError(Exception):
     def __init__(self, args):
         self.trace = ""
+
     def __str__(self):
         return "Π automaton evluation error: " + str(self.args)
+
 
 class PiAutomaton(dict):
 
@@ -113,14 +120,14 @@ class PiAutomaton(dict):
             raise IllFormed(
                 "Call to 'popCnt' on empty control stack: <" + str(self) + ">.")
 
-
     def emptyCnt(self):
         return len(self.cnt()) == 0
 
 #
 # Expressions
 #
-    
+
+
 class Exp(Statement):
 
     def left_operand(self):
@@ -129,7 +136,6 @@ class Exp(Statement):
         else:
             raise IllFormed("Call to 'left_operand' on " +
                             str(self) + ": " + "Operator is not binary.")
-
 
     def right_operand(self):
         if self.arity() == 2:
@@ -141,6 +147,7 @@ class Exp(Statement):
 
 class ArithExp(Exp):
     pass
+
 
 class Num(ArithExp):
     def __init__(self, n):
@@ -156,7 +163,6 @@ class Num(ArithExp):
             ret = str(self.num())
         return ret
 
-        
     def num(self):
         return self.operand(0)
 
@@ -304,6 +310,7 @@ class Not(BoolExp):
         else:
             raise IllFormed(self, e)
 
+
 class ExpKW():
     SUM = "#SUM"
     SUB = "#SUB"
@@ -318,6 +325,7 @@ class ExpKW():
     OR = "#OR"
     NOT = "#NOT"
 
+
 class ExpPiAut(PiAutomaton):
 
     def __evalSum(self, e):
@@ -326,7 +334,6 @@ class ExpPiAut(PiAutomaton):
         self.pushCnt(ExpKW.SUM)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalSumKW(self, e):
         v1 = self.popVal()
@@ -337,14 +344,12 @@ class ExpPiAut(PiAutomaton):
             v2 = v2.num()
         self.pushVal(v1 + v2)
 
-
     def __evalDiv(self, e):
         e1 = e.left_operand()
         e2 = e.right_operand()
         self.pushCnt(ExpKW.DIV)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalDivKW(self):
         v1 = self.popVal()
@@ -358,14 +363,12 @@ class ExpPiAut(PiAutomaton):
         else:
             self.pushVal(v1 / v2)
 
-
     def __evalMul(self, e):
         e1 = e.left_operand()
         e2 = e.right_operand()
         self.pushCnt(ExpKW.MUL)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalMulKW(self):
         v1 = self.popVal()
@@ -377,14 +380,12 @@ class ExpPiAut(PiAutomaton):
 
         self.pushVal(v1 * v2)
 
-
     def __evalSub(self, e):
         e1 = e.left_operand()
         e2 = e.right_operand()
         self.pushCnt(ExpKW.SUB)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalSubKW(self):
         v1 = self.popVal()
@@ -395,16 +396,13 @@ class ExpPiAut(PiAutomaton):
             v2 = v2.num()
         self.pushVal(v1 - v2)
 
-
     def __evalNum(self, n):
         f = n.num()
         self.pushVal(f)
 
-
     def __evalBoo(self, t):
         th = t.boo()
         self.pushVal(th)
-
 
     def __evalEq(self, e):
         e1 = e.left_operand()
@@ -412,7 +410,6 @@ class ExpPiAut(PiAutomaton):
         self.pushCnt(ExpKW.EQ)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalEqKW(self):
         v1 = self.popVal()
@@ -423,14 +420,12 @@ class ExpPiAut(PiAutomaton):
             v2 = v2.num()
         self.pushVal(v1 == v2)
 
-
     def __evalLt(self, e):
         e1 = e.left_operand()
         e2 = e.right_operand()
         self.pushCnt(ExpKW.LT)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalLtKW(self):
         v1 = self.popVal()
@@ -441,14 +436,12 @@ class ExpPiAut(PiAutomaton):
             v2 = v2.num()
         self.pushVal(v1 < v2)
 
-
     def __evalGt(self, e):
         e1 = e.left_operand()
         e2 = e.right_operand()
         self.pushCnt(ExpKW.GT)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalGtKW(self):
         v1 = self.popVal()
@@ -459,14 +452,12 @@ class ExpPiAut(PiAutomaton):
             v2 = v2.num()
         self.pushVal(v1 > v2)
 
-
     def __evalLe(self, e):
         e1 = e.left_operand()
         e2 = e.right_operand()
         self.pushCnt(ExpKW.LE)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalLeKW(self):
         v1 = self.popVal()
@@ -477,14 +468,12 @@ class ExpPiAut(PiAutomaton):
             v2 = v2.num()
         self.pushVal(v1 <= v2)
 
-
     def __evalGe(self, e):
         e1 = e.left_operand()
         e2 = e.right_operand()
         self.pushCnt(ExpKW.GE)
         self.pushCnt(e1)
         self.pushCnt(e2)
-
 
     def __evalGeKW(self):
         v1 = self.popVal()
@@ -495,7 +484,6 @@ class ExpPiAut(PiAutomaton):
             v2 = v2.num()
         self.pushVal(v1 >= v2)
 
-
     def __evalAnd(self, e):
         e1 = e.left_operand()
         e2 = e.right_operand()
@@ -503,12 +491,10 @@ class ExpPiAut(PiAutomaton):
         self.pushCnt(e1)
         self.pushCnt(e2)
 
-
     def __evalAndKW(self):
         v1 = self.popVal()
         v2 = self.popVal()
         self.pushVal(v1 and v2)
-
 
     def __evalOr(self, e):
         e1 = e.left_operand()
@@ -517,23 +503,19 @@ class ExpPiAut(PiAutomaton):
         self.pushCnt(e1)
         self.pushCnt(e2)
 
-
     def __evalOrKW(self):
         v1 = self.popVal()
         v2 = self.popVal()
         self.pushVal(v1 or v2)
-
 
     def __evalNot(self, e):
         e = e.operand(0)
         self.pushCnt(ExpKW.NOT)
         self.pushCnt(e)
 
-
     def __evalNotKW(self):
         v = self.popVal()
         self.pushVal(not v)
-
 
     def eval(self):
         e = self.popCnt()
@@ -590,19 +572,22 @@ class ExpPiAut(PiAutomaton):
         elif e == ExpKW.NOT:
             self.__evalNotKW()
         else:
-            raise EvaluationError( \
-                "Don't know how to evaluate " + str(e) + " of type " + str(type(e)) + "." + \
+            raise EvaluationError(
+                "Don't know how to evaluate " + str(e) + " of type " + str(type(e)) + "." +
                 "\nCall to 'eval' on \n" + str(self))
 
 #
 # Commands
 #
-        
+
+
 class Cmd(Statement):
     pass
 
+
 class Nop(Cmd):
     pass
+
 
 class Id(ArithExp, BoolExp):
     def __init__(self, s):
@@ -618,7 +603,7 @@ class Id(ArithExp, BoolExp):
 class Print(Cmd):
 
     def __init__(self, e):
-        if isinstance(e, Exp):
+        if isinstance(e, Exp) or isinstance(e, Call):
             Cmd.__init__(self, e)
         else:
             raise IllFormed(self, e)
@@ -626,21 +611,20 @@ class Print(Cmd):
     def exp(self):
         return self.operand(0)
 
+
 class Assign(Cmd):
 
     def __init__(self, i, e):
         if isinstance(i, Id):
-            if isinstance(e, Exp):
+            if isinstance(e, Exp) or isinstance(e, Call):
                 Cmd.__init__(self, i, e)
             else:
                 raise IllFormed(self, e)
         else:
             raise IllFormed(self, i)
 
-
     def lvalue(self):
         return self.operand(0)
-
 
     def rvalue(self):
         return self.operand(1)
@@ -662,11 +646,12 @@ class Loop(Cmd):
     def body(self):
         return self.operand(1)
 
+
 class Cond(Cmd):
     def __init__(self, be, c1, c2):
         if isinstance(be, BoolExp):
             if isinstance(c1, Cmd):
-                if isinstance(c2, Cmd):                
+                if isinstance(c2, Cmd):
                     Cmd.__init__(self, be, c1, c2)
                 else:
                     raise IllFormed(self, c2)
@@ -684,6 +669,7 @@ class Cond(Cmd):
     def else_branch(self):
         return self.operand(2)
 
+
 class CSeq(Cmd):
     def __init__(self, c1, c2):
         if isinstance(c1, Cmd):
@@ -700,6 +686,18 @@ class CSeq(Cmd):
     def right_cmd(self):
         return self.operand(1)
 
+
+class Return(Cmd):
+    def __init__(self, e):
+        if isinstance(e, Exp):
+            Cmd.__init__(self, e)
+        else:
+            raise IllFormed(self, e)
+
+    def exp(self):
+        return self.operand(0)
+
+
 class Env(dict):
     pass
 
@@ -714,9 +712,11 @@ class Sto(dict):
 
 class CmdKW:
     ASSIGN = "#ASSIGN"
-    LOOP   = "#LOOP"
-    COND   = "#COND"
-    PRINT  = "#PRINT" 
+    LOOP = "#LOOP"
+    COND = "#COND"
+    PRINT = "#PRINT"
+    RETURN = "#RETURN"
+
 
 class CmdPiAut(ExpPiAut):
 
@@ -737,7 +737,7 @@ class CmdPiAut(ExpPiAut):
         if i in en.keys():
             return en[i]
         else:
-            raise EvaluationError("Undeclared identifier: '" + \
+            raise EvaluationError("Undeclared identifier: '" +
                                   str(i) + "' not in environment " + str(en))
 
     def sto(self):
@@ -761,11 +761,12 @@ class CmdPiAut(ExpPiAut):
         if l in st.keys():
             st[l] = v
         else:
-            raise EvaluationError("Call to updateStore with location " + str(l) + " not in store.")
+            raise EvaluationError(
+                "Call to updateStore with location " + str(l) + " not in store.")
 
     def __emmit(self, e):
         self["out"].append(e)
-        
+
     def __evalPrint(self, c):
         e = c.exp()
         self.pushCnt(CmdKW.PRINT)
@@ -774,7 +775,7 @@ class CmdPiAut(ExpPiAut):
     def __evalPrintKW(self):
         v = self.popVal()
         self.__emmit(v)
-        
+
     def __evalAssign(self, c):
         i = c.lvalue()
         e = c.rvalue()
@@ -782,13 +783,11 @@ class CmdPiAut(ExpPiAut):
         self.pushCnt(CmdKW.ASSIGN)
         self.pushCnt(e)
 
-
     def __evalAssignKW(self):
         v = self.popVal()
         i = self.popVal()
         l = self.getBindable(i)
         self.updateStore(l, v)
-
 
     def __evalId(self, i):
         s = self.sto()
@@ -810,8 +809,8 @@ class CmdPiAut(ExpPiAut):
         if t:
             self.pushCnt(c.then_branch())
         else:
-            self.pushCnt(c.else_branch())            
-        
+            self.pushCnt(c.else_branch())
+
     def __evalLoop(self, c):
         be = c.cond()
         bl = c.body()
@@ -819,7 +818,6 @@ class CmdPiAut(ExpPiAut):
         self.pushVal(bl)
         self.pushCnt(CmdKW.LOOP)
         self.pushCnt(be)
-
 
     def __evalLoopKW(self):
         t = self.popVal()
@@ -832,13 +830,37 @@ class CmdPiAut(ExpPiAut):
             self.popVal()
             self.popVal()
 
-
     def __evalCSeq(self, c):
         c1 = c.left_cmd()
         c2 = c.right_cmd()
         self.pushCnt(c2)
         self.pushCnt(c1)
 
+    def __evalReturn(self, c):
+        exp = c.exp()
+        self.pushCnt(CmdKW.RETURN)
+        self.pushCnt(exp)
+
+    def __evalReturnKW(self):
+        v = self.popVal()
+
+        t_val = []
+        t_cnt = []
+        tmp = self.popCnt()
+        while tmp == DecCmdKW.BLKCMD:
+            t_cnt.append(tmp)
+            t_env = self.popVal()
+            t_locs = self.popVal()
+            t_val.append(t_env)
+            t_val.append(t_locs)
+            tmp = self.popCnt()
+        self.pushCnt(tmp)
+
+        self.pushVal(v)
+        for i in range(len(t_cnt)):
+            self.pushCnt(t_cnt.pop())
+            self.pushVal(t_val.pop())
+            self.pushVal(t_val.pop())
 
     def eval(self):
         c = self.popCnt()
@@ -864,6 +886,10 @@ class CmdPiAut(ExpPiAut):
             self.__evalLoopKW()
         elif isinstance(c, CSeq):
             self.__evalCSeq(c)
+        elif isinstance(c, Return):
+            self.__evalReturn(c)
+        elif c == CmdKW.RETURN:
+            self.__evalReturnKW()
         else:
             self.pushCnt(c)
             super().eval()
@@ -871,7 +897,8 @@ class CmdPiAut(ExpPiAut):
 #
 # Declarations
 #
-            
+
+
 class Dec(Statement):
     pass
 
@@ -885,7 +912,7 @@ class Bind(Dec):
                 i = args[0]
                 e = args[1]
                 if isinstance(i, Id):
-                    if isinstance(e, Exp):
+                    if isinstance(e, Exp) or isinstance(e, Call):
                         Dec.__init__(self, i, e)
                     else:
                         raise IllFormed(self, e)
@@ -935,11 +962,11 @@ class Blk(Cmd):
                     Cmd.__init__(self, d, c)
                 else:
                     raise IllFormed(self, c)
-            else: 
-               raise IllFormed(self, d)
+            else:
+                raise IllFormed(self, d)
         # Blocks with no declarations
         elif len(args) == 1:
-            c = args[0] 
+            c = args[0]
             if isinstance(c, Cmd):
                 Cmd.__init__(self, c)
             else:
@@ -948,7 +975,7 @@ class Blk(Cmd):
     def dec(self):
         if self.arity() == 1:
             return None
-        elif self.arity() == 2:    
+        elif self.arity() == 2:
             return self.operand(0)
         else:
             raise IllFormed(self)
@@ -956,10 +983,11 @@ class Blk(Cmd):
     def cmd(self):
         if self.arity() == 1:
             return self.operand(0)
-        elif self.arity() == 2:    
+        elif self.arity() == 2:
             return self.operand(1)
         else:
             raise IllFormed(self)
+
 
 class DSeq(Dec):
 
@@ -978,17 +1006,21 @@ class DSeq(Dec):
     def right_dec(self):
         return self.operand(1)
 
+
 class DecExpKW(ExpKW):
     REF = "#REF"
     CNS = "#CNS"
+
 
 class DecCmdKW(CmdKW):
     BLKDEC = "#BLKDEC"
     BLKCMD = "#BLKCMD"
 
+
 class DecKW():
     BIND = "#BIND"
     DSEQ = "#DSEQ"
+
 
 class DecPiAut(CmdPiAut):
 
@@ -1025,7 +1057,7 @@ class DecPiAut(CmdPiAut):
         l = self.popVal()
         i = self.popVal()
         x = i.id()
-        self.pushVal({x : l})
+        self.pushVal({x: l})
 
     def __evalDSeq(self, ds):
         d1 = ds.left_dec()
@@ -1054,7 +1086,7 @@ class DecPiAut(CmdPiAut):
             # If the block has no declarations
             # we need to save the environment because the
             # evaluation of BLOCKCMD restores it.
-            # There could be an opcode to capture this 
+            # There could be an opcode to capture this
             # semantics such that saving and restoring an unchanged
             # environment does not happen, as it is now.
             self.pushVal(self.env())
@@ -1085,7 +1117,7 @@ class DecPiAut(CmdPiAut):
         self["sto"] = s
         # Retrieves the locations prior to the start of the execution of the block.
         ls = self.popVal()
-        self["locs"] = ls            
+        self["locs"] = ls
 
     def eval(self):
         d = self.popCnt()
@@ -1110,20 +1142,22 @@ class DecPiAut(CmdPiAut):
         else:
             self.pushCnt(d)
             super().eval()
- 
-#            
+
+#
 # Abstractions
 #
 
+
 class Formals(list):
     def __init__(self, f):
-        if isinstance(f, list): 
+        if isinstance(f, list):
             for a in f:
                 if not isinstance(a, Id):
                     raise IllFormed(self, a)
             self.append(f)
         else:
             raise IllFormed(self, f)
+
 
 class Abs(Statement):
     def __init__(self, f, b):
@@ -1141,11 +1175,13 @@ class Abs(Statement):
     def blk(self):
         return self.operand(1)
 
+
 class BindAbs(Bind):
     '''
     BindAbs is a form of bind but that receives an Abs instead of an
     expression.
     '''
+
     def __init__(self, i, p):
         if isinstance(i, Id):
             if isinstance(p, Abs):
@@ -1154,6 +1190,7 @@ class BindAbs(Bind):
                 raise IllFormed(self, p)
         else:
             raise IllFormed(self, i)
+
 
 class Actuals(list):
     def __init__(self, a):
@@ -1164,6 +1201,7 @@ class Actuals(list):
             self.append(a)
         else:
             raise IllFormed(self, a)
+
 
 class Call(Cmd):
     def __init__(self, f, actuals):
@@ -1180,6 +1218,7 @@ class Call(Cmd):
 
     def actuals(self):
         return self.operand(1)
+
 
 class Closure(dict):
     def __init__(self, f, b, e):
@@ -1221,14 +1260,16 @@ class Closure(dict):
     def blk(self):
         return self['block']
 
+
 class CallKW(CmdKW):
     CALL = "#CALL"
-    
+
+
 class AbsPiAut(DecPiAut):
     def __evalAbs(self, a):
         if not isinstance(a, Abs):  # p must be an abstraction
             raise EvaluationError(self,
-                                  "Function __evalAbs called with no abstraction but with " + \
+                                  "Function __evalAbs called with no abstraction but with " +
                                   str(a) + " instead.")
         else:
             f = a.formals()             # Formal parameters
@@ -1242,43 +1283,43 @@ class AbsPiAut(DecPiAut):
 
     def match(self, f, a):
         return self.__match(f, a)
-        
+
     def __match(self, f, a):
         '''
         Given a list of formal parameters and a list of actual parameters,
         it returns an environment relating the elements of the former with the latter.
         '''
         if isinstance(f, list) and isinstance(a, list):
-                if len(f) == 0:
-                    return {}
-                else:
-                    if len(f) == len(a):
+            if len(f) == 0:
+                return {}
+            else:
+                if len(f) == len(a):
                     # For some reason, f[0] is a tuple, not an Id.
-                        f0 = f[0]
-                        a0 = a[0]
-                        b0 = {f0.id(): a0}
-                        if len(f) == 1:
-                            return b0
-                        else:
-                        # For some reason, f[0] is a tuple, not an Id.
-                            e = b0
-                            f1 = f[1]
-                            a1 = a[1]
-                            b1 = {f1.id(): a1}
-                            e.update(b1)
-                            for i in range(2, len(f)):
-                                fi = f[i][0]
-                                ai = a[i][0]
-                                e.update({fi.id(): ai})
-                            return e
+                    f0 = f[0]
+                    a0 = a[0]
+                    b0 = {f0.id(): a0}
+                    if len(f) == 1:
+                        return b0
                     else:
-                        raise EvaluationError("Call to '__match' on " + \
-                                              str(self) + ": " +
-                                              "formals and actuals differ in size.")
+                        # For some reason, f[0] is a tuple, not an Id.
+                        e = b0
+                        f1 = f[1]
+                        a1 = a[1]
+                        b1 = {f1.id(): a1}
+                        e.update(b1)
+                        for i in range(2, len(f)):
+                            fi = f[i][0]
+                            ai = a[i][0]
+                            e.update({fi.id(): ai})
+                        return e
+                else:
+                    raise EvaluationError("Call to '__match' on " +
+                                          str(self) + ": " +
+                                          "formals and actuals differ in size.")
         else:
-            raise EvaluationError("Call to '__match' on " + \
-                                  str(self) + " with formals " + \
-                                  str(f)    + " and actuals" + str(a))
+            raise EvaluationError("Call to '__match' on " +
+                                  str(self) + " with formals " +
+                                  str(f) + " and actuals" + str(a))
 
     def __evalCall(self):
         '''
@@ -1312,12 +1353,12 @@ class AbsPiAut(DecPiAut):
         # Matches formals and actuals, creating an environment.
         d = self.__match(f, acs)
         if not d:
-            raise EvaluationError("Call to __match failed with formals "+ str(f) + \
+            raise EvaluationError("Call to __match failed with formals " + str(f) +
                                   " and actuals " + str(acs))
         # Retrieves the current environment.
         # e = self.env().copy()
         # Retrives the closure's environment.
-        ce = clos.env()      
+        ce = clos.env()
         # The caller's block must run on the closure's environment
         # overwritten with the matches.
         # e.update(ce)
@@ -1343,16 +1384,19 @@ class AbsPiAut(DecPiAut):
             self.pushCnt(d)
             super().eval()
 
-#            
+#
 # Recursive abstractions
 #
+
 
 class BindRecAbs(BindAbs):
     pass
 
+
 class RecKW(CmdKW):
     REC = "#REC"
     RECCALL = "#RECCALL"
+
 
 class Rec(Closure):
     def __init__(self, f, b, e1, e2):
@@ -1371,10 +1415,11 @@ class Rec(Closure):
             self['recenv'] = e2
         else:
             raise EvaluationError(self, e)
-        
+
     def recenv(self):
         return self['recenv']
-        
+
+
 def unfold(e):
     return reclose(e, e)
     # if isinstance(e, Env):
@@ -1382,6 +1427,7 @@ def unfold(e):
     # else:
     #     raise EvaluationError("Can't unfold term " + str(e) + \
     #                           ". It is not an Environnment. It's type is " + str(type(e)) + ".")
+
 
 def reclose(e1, e2):
     if len(e2) >= 1:
@@ -1405,6 +1451,7 @@ def reclose(e1, e2):
     # else:
     #     raise EvaluationError(e2)
 
+
 class RecPiAut(AbsPiAut):
     def __evalRec(self, b):
         v = self.popVal()
@@ -1425,7 +1472,7 @@ class RecPiAut(AbsPiAut):
 
         There is only support for one-parameter expressions in actuals.
         '''
-        #if not isinstance(c, Call):    # c must be a Call object
+        # if not isinstance(c, Call):    # c must be a Call object
         #    raise EvaluationError("Call to __evalCall with no Call object but with " + \
         #                          str(c) + " instead.")
         # Retrieves the evaluated actual parameters from the system stack.
@@ -1435,7 +1482,7 @@ class RecPiAut(AbsPiAut):
         # Retrieves the closure associated with the caller function.
         reclos = self.getBindable(caller.id())
         if not isinstance(reclos, Rec):
-            raise EvaluationError("No recursive closure bound to " + \
+            raise EvaluationError("No recursive closure bound to " +
                                   str(caller.id()) + " in call to recursive procedure.")
         # Retrieves the formal parameters from the closure.
         f = reclos.formals()
@@ -1443,14 +1490,14 @@ class RecPiAut(AbsPiAut):
         # d = self.__match(f, acs)
         d = self.match(f, acs)
         if not d:
-            raise EvaluationError("Call to __match failed with formals "+ str(f) + \
+            raise EvaluationError("Call to __match failed with formals " + str(f) +
                                   " and actuals " + str(acs))
         # Retrieves the current environment.
         # e = self.env()
         # Retrives the recursive closure's environment.
-        rce = reclos.env()      
+        rce = reclos.env()
         # Retrives the recursive closure's recursive environment.
-        rcre = reclos.recenv()      
+        rcre = reclos.recenv()
         # The caller's block must run on the current environment
         # overwritten with the recursive (unfolded) environments and matches.
         # Is it the current env. or the reclosure's?
@@ -1471,7 +1518,7 @@ class RecPiAut(AbsPiAut):
     def __evalRecKW(self):
         b = self.popVal()
         self.pushVal(unfold(b))
-        
+
     def eval(self):
         c = self.popCnt()
         if isinstance(c, BindRecAbs):
@@ -1496,16 +1543,17 @@ class RecPiAut(AbsPiAut):
                         self.pushCnt(a)
                         self.pushVal(c.caller())
                 else:
-                    raise EvaluationError("Call to " + str(caller) + " with no (rec)closure.")
+                    raise EvaluationError(
+                        "Call to " + str(caller) + " with no (rec)closure.")
             else:
-                raise EvaluationError("Call to " + str(caller) + " not in env.")
+                raise EvaluationError(
+                    "Call to " + str(caller) + " not in env.")
         elif c == RecKW.RECCALL:
             self.__evalRecCall()
         else:
             self.pushCnt(c)
             super().eval()
 
-import datetime
 
 def run(ast, color=True):
     global COLORED

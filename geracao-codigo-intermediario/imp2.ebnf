@@ -24,13 +24,25 @@
 @@keyword :: '{' '}'
 @@keyword :: 'print'
 
-start = [ds:decSeq] [cs:cmd_seq] $ ;
+start = [ds:dec_seq] [cs:cmd_seq] $ ;
 
-exp = paren_exp | bin_exp | un_exp | @:atom ;
+dec_seq = { d:dec }* ;
+
+dec = const | var | fn | rec ;
+
+const = op:"const" idn:identifier "=" e:exp ";" ;
+
+# This makes sure that an identifier does not match a keyword.
+@name
+identifier = /(?!\d)\w+/ ;
+
+exp = call | paren_exp | un_exp | bin_exp | @:atom ;
 
 paren_exp = "(" e:exp ")" ;
 
 bin_exp = e1:exp op:binop e2:exp ;
+
+binop = "and"| "or" | "==" | "<=" | ">=" | "<" | ">"  | "+" | "-" | "*" | "/"  ; 
 
 un_exp = op:"not" e:exp ;
 
@@ -38,53 +50,41 @@ atom = @:num_atom  | @:truth_atom | @:id_atom ;
 
 num_atom = number ;
 
+number = /\d+/ ;
+
 truth_atom = truth ;
-
-id_atom = identifier ;
-
-binop = "and"| "or" | "==" | "<=" | ">=" | "<" | ">"  | "+" | "-" | "*" | "/"  ; 
 
 truth = 'True' | 'False' ;
 
-# This makes sure that an identifier does not match a keyword.
-@name
-identifier = /(?!\d)\w+/ ;
+id_atom = identifier ;
 
-number = /\d+/ ;
+var = op:"var" ","%{ idn:identifier "=" e:exp }+ ";" ;
 
-blk = "{" ds:decSeq cs:cmd_seq "}" ;
+fn = op:"def" idn:identifier '(' f:formal ')' b:blk ;
+
+formal = ','%{ identifier }* ;
+
+blk = "{" ds:dec_seq cs:cmd_seq "}" ;
+
+rec = op:"rec" idn:identifier '(' f:formal ')' b:blk ;
 
 cmd_seq = ";"%{ac:atom_cmd}+ ;
 
-atom_cmd = cond | loop | assign | print | call | skip ;
-
-skip = "skip" ;
-
-assign = idn:identifier op:":=" e:exp ;
-
-print = op:"print" e:exp ;
+atom_cmd = print | cond | loop | assign | call | skip | ret ;
 
 cond = op:"if" t:paren_exp b1:blk ["else" b2:blk] ; 
 
 loop = op:"while" t:paren_exp b:blk ;
 
-dec = fn | rec | var | const ;
+assign = idn:identifier op:":=" e:exp ;
 
-decSeq = { d:dec }* ;
-
-var = op:"var" ","%{ idn:identifier "=" e:exp }+ ";" ;
-
-const = op:"const" idn:identifier "=" e:exp ";" ;
-
-fn = op:"def" idn:identifier '(' f:formal ')' b:blk ;
-
-rec = op:"rec" idn:identifier '(' f:formal ')' b:blk ;
-
-formal = ','%{ identifier }* ;
+print = op:"print" e:exp ;
 
 call = idn:identifier '(' a:actual ')' ;
 
 actual = ','%{ exp }* ;
 
+skip = "skip" ;
 
+ret = "return" e:exp ;
 
