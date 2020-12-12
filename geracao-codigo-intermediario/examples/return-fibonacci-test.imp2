@@ -1,0 +1,14 @@
+def fib(x) {
+  var f1 = 1, f2 = 1, cont = 3;
+  var resultado = 1;
+  while (cont <= x) {
+    resultado := f2 + f1;
+    f1 := f2;
+    f2 := resultado;
+    cont := cont + 1
+  };
+  return resultado
+}
+
+print(fib(10))
+# Output = [55]

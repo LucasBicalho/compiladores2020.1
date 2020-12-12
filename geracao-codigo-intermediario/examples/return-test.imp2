@@ -1,10 +1,8 @@
-var resultado = 0 ;
-
-def func_square (num) {
-    var square = 0 ;
-    square := num * num ;
-    return square
+def square(x) {
+  var s = 0;
+  s := x * x;
+  return s
 }
 
-resultado := func_square(10) ;
-print(resultado)
+print(square(6))
+# Output = [36]
